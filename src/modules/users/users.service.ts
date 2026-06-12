@@ -1,57 +1,51 @@
-import { Users } from "../../common/database/schema";
-import { DrizzleService } from "../../common/database/drizzle.service";
-import { BadRequestException, Injectable } from "@nestjs/common";
-import { and, eq, isNull } from "drizzle-orm";
-import { CreateUserDto } from "./dto/create.user.dto";
-import { UpdateUserDto } from "./dto/update.user.dto";
-
-export interface UserEntity {
-  id?: number | null;
-  name?: string | null;
-  email?: string | null;
-}
+import { Users } from '../../common/database/schema';
+import { DrizzleService } from '../../common/database/drizzle.service';
+import { BadRequestException, Injectable } from '@nestjs/common';
+import { and, eq, isNull } from 'drizzle-orm';
+import { CreateUserDto } from './dto/create.user.dto';
+import { UpdateUserDto } from './dto/update.user.dto';
+import { authConfig } from '../../config/auth.config';
+import { IUserService } from './interface/user-service.interface';
+import { UserEntity } from './interface/user.interface';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
-export class UserService {
+export class UserService implements IUserService {
   constructor(private drizzle: DrizzleService) { }
 
   async create(dto: CreateUserDto): Promise<UserEntity> {
-    if (!dto.email) {
-      throw new BadRequestException("Email is required");
-    }
-    if (!dto.password) {
-      throw new BadRequestException("Password is required");
-    }
-    if (!dto.name) {
-      throw new BadRequestException("Name is required");
-    }
 
     const existingEmail = await this.drizzle.db
       .select()
       .from(Users)
-      .where(
-        and(
-          eq(Users.email, dto.email),
-          isNull(Users.deleted_at)
-        ))
+      .where(and(eq(Users.email, dto.email), isNull(Users.deleted_at)))
       .limit(1);
 
     if (existingEmail.length > 0) {
-      throw new BadRequestException("Email already exists");
+      throw new BadRequestException('Email already exists');
     }
+    let passwordHashed = await bcrypt.hash(
+      dto.password,
+      authConfig.bcrypt.saltRounds,
+    );
 
-    const [user] = await this.drizzle.db.insert(Users).values({
-      name: dto.name,
-      email: dto.email,
-      password: dto.password,
-      created_at: new Date()
-    })
+    const [user] = await this.drizzle.db
+      .insert(Users)
+      .values({
+        name: dto.name,
+        email: dto.email,
+        password: passwordHashed,
+        created_at: new Date(),
+      })
       .returning();
 
     return {
       id: user.id,
       name: user.name,
       email: user.email,
+      created_at: user.created_at,
+      updated_at: user.updated_at,
+      deleted_at: user.deleted_at,
     };
   }
 
@@ -62,16 +56,15 @@ export class UserService {
         id: Users.id,
         name: Users.name,
         email: Users.email,
+        created_at: Users.created_at,
+        updated_at: Users.updated_at,
+        deleted_at: Users.deleted_at,
       })
       .from(Users)
-      .where(
-        and(
-          eq(Users.id, id),
-          isNull(Users.deleted_at)
-        ))
+      .where(and(eq(Users.id, id), isNull(Users.deleted_at)))
       .limit(1);
     if (!user) {
-      throw new BadRequestException("User does not exist");
+      throw new BadRequestException('User does not exist');
     }
     return user;
   }
@@ -82,10 +75,14 @@ export class UserService {
         id: Users.id,
         name: Users.name,
         email: Users.email,
+        created_at: Users.created_at,
+        updated_at: Users.updated_at,
+        deleted_at: Users.deleted_at,
       })
-      .from(Users).where(isNull(Users.deleted_at))
+      .from(Users)
+      .where(isNull(Users.deleted_at));
     if (users.length === 0) {
-      throw new BadRequestException("No users found.");
+      throw new BadRequestException('No users found.');
     }
     return users;
   }
@@ -95,17 +92,26 @@ export class UserService {
     const updatedData: Record<string, unknown> = {
       name: dto.name !== undefined ? dto.name : existingUser.name,
       email: dto.email !== undefined ? dto.email : existingUser.email,
-      updated_at: new Date()
+      updated_at: new Date(),
+    };
+    if (dto.password !== undefined) {
+      updatedData.password = await bcrypt.hash(
+        dto.password,
+        authConfig.bcrypt.saltRounds,
+      );
     }
     const updatedUser = await this.drizzle.db
       .update(Users)
       .set(updatedData)
       .where(eq(Users.id, id))
-      .returning()
+      .returning();
     return {
       id: existingUser.id,
       name: updatedUser[0].name,
       email: updatedUser[0].email,
+      created_at: existingUser.created_at,
+      updated_at: updatedUser[0].updated_at,
+      deleted_at: existingUser.deleted_at,
     };
   }
 
@@ -114,9 +120,9 @@ export class UserService {
     await this.drizzle.db
       .update(Users)
       .set({
-        deleted_at: new Date()
+        deleted_at: new Date(),
       })
-      .where(eq(Users.id, id))
-    return { message: "user deleted successfully." };
+      .where(eq(Users.id, id));
+    return { message: 'user deleted successfully.' };
   }
 }
