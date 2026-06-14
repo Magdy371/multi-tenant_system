@@ -2,6 +2,8 @@ import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
 import { INestApplication } from "@nestjs/common";
 import { SwaggerTheme, SwaggerThemeNameEnum } from "swagger-themes";
 import { UsersModule } from "../modules/users/users.module";
+import { Roles } from "src/common/database/schema";
+import { RoleModule } from "src/modules/roles/roles.module";
 
 export function setupSwagger(app: INestApplication) {
   const theme = new SwaggerTheme();
@@ -11,6 +13,7 @@ export function setupSwagger(app: INestApplication) {
     .setDescription("tenant-system Backend API Documentation")
     .setVersion("2.0.0")
     .addTag("Users", "User management endpoints")
+    .addTag("Roles", "Roles management endPoints")
     .addBearerAuth(
       {
         type: "http",
@@ -25,12 +28,12 @@ export function setupSwagger(app: INestApplication) {
     .build();
 
   const document = SwaggerModule.createDocument(app, config, {
-    include: [UsersModule],
+    include: [UsersModule, RoleModule],
     operationIdFactory: (controllerKey: string, methodKey: string) => methodKey,
   });
 
   // Define public endpoints that should not require authentication
-  const publicEndpoints = ["/users"];
+  const publicEndpoints = ["/users", "/roles"];
 
   // Add global security to all endpoints except public ones
   Object.keys(document.paths).forEach((path) => {
