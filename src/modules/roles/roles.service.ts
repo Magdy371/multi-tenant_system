@@ -3,30 +3,30 @@ import { IRolesService } from './interfaces/roles-service.interface'
 import { CreateRoleDto } from './dto/create-role.dto'
 import { UpdateRoleDto } from './dto/update-role.dto'
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common'
-import { Roles, rolesRelations, Users } from '../../common/database/schema'
+import { roles, rolesRelations, users } from '../../common/database/schema'
 import { DrizzleService } from 'src/common/database/drizzle.service'
 import { and, eq, isNull } from 'drizzle-orm'
 
 @Injectable()
-export class RoleService implements IRolesService {
+export class roleservice implements IRolesService {
     constructor(private drizzle: DrizzleService) { }
     async create(data: CreateRoleDto): Promise<Role> {
         //check if role name does exist
         const roleName = await this.drizzle.db
             .select()
-            .from(Roles)
+            .from(roles)
             .where(
                 and(
-                    eq(Roles.name, data.name),
-                    eq(Roles.isActive, true),
-                    isNull(Roles.deleted_at)
+                    eq(roles.name, data.name),
+                    eq(roles.isActive, true),
+                    isNull(roles.deleted_at)
                 )
             )
             .limit(1)
         if (roleName) {
             throw new BadRequestException("role name already exist")
         }
-        const [role] = await this.drizzle.db.insert(Roles).values({
+        const [role] = await this.drizzle.db.insert(roles).values({
             name: data.name,
             isGlobal: data.isGlobal,
             isActive: data.isActive,
@@ -46,17 +46,17 @@ export class RoleService implements IRolesService {
     async findOne(id: number): Promise<Role> {
         const [existingRole] = await this.drizzle.db
             .select({
-                name: Roles.name,
-                isActive: Roles.isActive,
-                isGlobal: Roles.isGlobal,
-                description: Roles.description
+                name: roles.name,
+                isActive: roles.isActive,
+                isGlobal: roles.isGlobal,
+                description: roles.description
             })
-            .from(Roles)
+            .from(roles)
             .where(
                 and(
-                    eq(Roles.id, id),
-                    eq(Roles.isActive, true),
-                    isNull(Roles.deleted_at)
+                    eq(roles.id, id),
+                    eq(roles.isActive, true),
+                    isNull(roles.deleted_at)
                 )
             )
             .limit(1);
@@ -74,17 +74,17 @@ export class RoleService implements IRolesService {
     async findAll(): Promise<Role[]> {
         const RoleArray = await this.drizzle.db
             .select({
-                id: Roles.id,
-                name: Roles.name,
-                isActive: Roles.isActive,
-                isGlobal: Roles.isGlobal,
-                description: Roles.description
+                id: roles.id,
+                name: roles.name,
+                isActive: roles.isActive,
+                isGlobal: roles.isGlobal,
+                description: roles.description
             })
-            .from(Roles)
+            .from(roles)
             .where(
                 and(
-                    eq(Roles.isActive, true),
-                    isNull(Roles.deleted_at)
+                    eq(roles.isActive, true),
+                    isNull(roles.deleted_at)
                 )
             )
         return RoleArray;
@@ -98,9 +98,9 @@ export class RoleService implements IRolesService {
             description: data.description !== undefined ? data.description : existingRole.description
         }
         const [updatedRole] = await this.drizzle.db
-            .update(Roles)
+            .update(roles)
             .set(updatedData)
-            .where(eq(Roles.id, id))
+            .where(eq(roles.id, id))
             .returning();
         return {
             id: id,
@@ -113,11 +113,11 @@ export class RoleService implements IRolesService {
     async remove(id: number): Promise<{ message: string }> {
         await this.findOne(id);
         await this.drizzle.db
-            .update(Roles)
+            .update(roles)
             .set({
                 deleted_at: new Date()
             })
-            .where(eq(Roles.id, id))
+            .where(eq(roles.id, id))
         return { message: "Role deleted successfully" };
     }
 

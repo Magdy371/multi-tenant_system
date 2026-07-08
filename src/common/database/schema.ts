@@ -1,18 +1,21 @@
-import { sql, relations } from 'drizzle-orm'
+import { relations } from 'drizzle-orm'
 import {
     serial,
-    unique,
     timestamp,
     pgTable,
-    pgEnum,
-    uniqueIndex,
     integer,
     text,
     boolean,
-    index
+    index,
+    unique
 } from 'drizzle-orm/pg-core'
 
-export enum permissionScop {
+
+export enum clientType {
+  MERCHANT = 'MERCHANT',
+  COURIER = 'COURIER',
+}
+export enum scopType {
   SYSTEM = 'SYSTEM',
   CLIENT = 'CLIENT',
   VENDOR = 'VENDOR',
@@ -34,7 +37,7 @@ export enum permissionAction {
   REJECT = 'REJECT',
 }
 
-const enum permissionResources {
+export const enum resources {
   // Identity & Access Management (IAM)
   USER = 'USER',
   ROLES = 'ROLE',
@@ -71,6 +74,19 @@ export enum userStatus {
   SUSPENDED = 'SUSPENDED',
 }
 
+export const clients = pgTable(
+  'Client',
+  {
+    id: serial("id").primaryKey(),
+    name: text("name"),
+    businessName: text("businessName"),
+    type: text("tyoe").$type<clientType>().default(clientType.COURIER),
+    status: text("status").$type<userStatus>().default(userStatus.ACTIVE),
+    created_at: timestamp("created_at").defaultNow().notNull(),
+    updated_at: timestamp("updated_at").defaultNow().notNull(),
+    deleted_at: timestamp("deleted_at"),
+  }
+);
 
 export const users = pgTable(
     "User",
@@ -87,6 +103,29 @@ export const users = pgTable(
         updated_at: timestamp("updated_at"),
         deleted_at: timestamp("deleted_at"),
     }
+);
+
+export const userClients = pgTable(
+  'UserClient',
+  {
+    id: serial("id").primaryKey(),
+    userId: integer("userId").references(() => users.id, {onDelete: "cascade"}),
+    clientId: integer("clientId").references(() => clients.id,{onDelete: "cascade"}),
+    isOwner: boolean("isOwner").default(false),
+    status: text("status").$type<userStatus>(),
+    joined_at: timestamp("joined_at").defaultNow().notNull(),
+    left_at:timestamp("left_at").defaultNow().notNull(),
+    created_at: timestamp("created_at").defaultNow().notNull(),
+    updated_at: timestamp("updated_at").defaultNow().notNull(),
+    deleted_at: timestamp("deleted_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    userClientUnique: unique().on(table.userId, table.clientId),
+    userIdIdx: index("UserClient_userId_idx").on(table.userId),
+    clientIdIdx: index("UserClient_clientId_idx").on(table.clientId),
+    statusIdx: index("UserClient_status_idx").on(table.status),
+    isOwnerIdx: index("UserClient_isOwner_idx").on(table.isOwner),
+  }),
 );
 
 export const roles = pgTable(
@@ -111,9 +150,9 @@ export const permissions = pgTable(
   {
     id: serial("id").primaryKey(),
     name: text("name"),
-    scope: text("scope").$type<permissionScop>(),
+    scope: text("scope").$type<scopType>(),
     description: text("description"),
-    resource: text("resource").$type<permissionResources>(),
+    resource: text("resource").$type<resources>(),
     action: text("action").$type<permissionAction>(),
     isActive: boolean("isActive").notNull().default(true),
     created_at: timestamp("created_at"),

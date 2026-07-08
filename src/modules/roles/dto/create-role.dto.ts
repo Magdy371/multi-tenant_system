@@ -1,4 +1,4 @@
-export { Roles } from '../../../common/database/schema';
+export { roles } from '../../../common/database/schema';
 import { ApiProperty } from "@nestjs/swagger";
 import { IsString, IsBoolean, IsOptional } from "class-validator";
 export class CreateRoleDto {
