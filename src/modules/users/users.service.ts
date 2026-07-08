@@ -1,4 +1,4 @@
-import { Users } from '../../common/database/schema';
+import { users } from '../../common/database/schema';
 import { DrizzleService } from '../../common/database/drizzle.service';
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { and, eq, isNull } from 'drizzle-orm';
@@ -17,8 +17,8 @@ export class UserService implements IUserService {
 
     const existingEmail = await this.drizzle.db
       .select()
-      .from(Users)
-      .where(and(eq(Users.email, dto.email), isNull(Users.deleted_at)))
+      .from(users)
+      .where(and(eq(users.email, dto.email), isNull(users.deleted_at)))
       .limit(1);
 
     if (existingEmail.length > 0) {
@@ -30,7 +30,7 @@ export class UserService implements IUserService {
     );
 
     const [user] = await this.drizzle.db
-      .insert(Users)
+      .insert(users)
       .values({
         name: dto.name,
         email: dto.email,
@@ -53,15 +53,15 @@ export class UserService implements IUserService {
     //find the user
     const [user] = await this.drizzle.db
       .select({
-        id: Users.id,
-        name: Users.name,
-        email: Users.email,
-        created_at: Users.created_at,
-        updated_at: Users.updated_at,
-        deleted_at: Users.deleted_at,
+        id: users.id,
+        name: users.name,
+        email: users.email,
+        created_at: users.created_at,
+        updated_at: users.updated_at,
+        deleted_at: users.deleted_at,
       })
-      .from(Users)
-      .where(and(eq(Users.id, id), isNull(Users.deleted_at)))
+      .from(users)
+      .where(and(eq(users.id, id), isNull(users.deleted_at)))
       .limit(1);
     if (!user) {
       throw new BadRequestException('User does not exist');
@@ -70,21 +70,21 @@ export class UserService implements IUserService {
   }
 
   async findAll(): Promise<UserEntity[]> {
-    const users = await this.drizzle.db
+    const allUsers = await this.drizzle.db
       .select({
-        id: Users.id,
-        name: Users.name,
-        email: Users.email,
-        created_at: Users.created_at,
-        updated_at: Users.updated_at,
-        deleted_at: Users.deleted_at,
+        id: users.id,
+        name: users.name,
+        email: users.email,
+        created_at: users.created_at,
+        updated_at: users.updated_at,
+        deleted_at: users.deleted_at,
       })
-      .from(Users)
-      .where(isNull(Users.deleted_at));
-    if (users.length === 0) {
+      .from(users)
+      .where(isNull(users.deleted_at));
+    if (allUsers.length === 0) {
       throw new BadRequestException('No users found.');
     }
-    return users;
+    return allUsers;
   }
 
   async update(id: number, dto: UpdateUserDto): Promise<UserEntity> {
@@ -101,9 +101,9 @@ export class UserService implements IUserService {
       );
     }
     const updatedUser = await this.drizzle.db
-      .update(Users)
+      .update(users)
       .set(updatedData)
-      .where(eq(Users.id, id))
+      .where(eq(users.id, id))
       .returning();
     return {
       id: existingUser.id,
@@ -118,11 +118,11 @@ export class UserService implements IUserService {
   async remove(id: number): Promise<{ message: string }> {
     await this.findOne(id);
     await this.drizzle.db
-      .update(Users)
+      .update(users)
       .set({
         deleted_at: new Date(),
       })
-      .where(eq(Users.id, id));
+      .where(eq(users.id, id));
     return { message: 'user deleted successfully.' };
   }
 }
