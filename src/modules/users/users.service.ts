@@ -11,10 +11,9 @@ import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UserService implements IUserService {
-  constructor(private drizzle: DrizzleService) { }
+  constructor(private drizzle: DrizzleService) {}
 
   async create(dto: CreateUserDto): Promise<UserEntity> {
-
     const existingEmail = await this.drizzle.db
       .select()
       .from(users)
@@ -24,7 +23,7 @@ export class UserService implements IUserService {
     if (existingEmail.length > 0) {
       throw new BadRequestException('Email already exists');
     }
-    let passwordHashed = await bcrypt.hash(
+    const passwordHashed = await bcrypt.hash(
       dto.password,
       authConfig.bcrypt.saltRounds,
     );

@@ -11,7 +11,6 @@ import postgres from 'postgres';
  */
 import { drizzle } from 'drizzle-orm/postgres-js';
 import * as schema from './schema';
-import { sql } from 'drizzle-orm';
 
 @Injectable()
 export class DrizzleService implements OnModuleInit, OnModuleDestroy {
@@ -53,10 +52,10 @@ export class DrizzleService implements OnModuleInit, OnModuleDestroy {
 
   async onModuleInit(): Promise<void> {
     // Connection is established lazily, no need to explicitly connect
-    this.logger.log('Drizzle service initialized');
+    await this.logger.log('Drizzle service initialized');
   }
   async onModuleDestroy(): Promise<void> {
     await this.client.end();
-    this.logger.log('Drizzle service destroyed');
+    await this.logger.log('Drizzle service destroyed');
   }
 }

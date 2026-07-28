@@ -1,34 +1,33 @@
-import {ApiProperty} from "@nestjs/swagger";
+import { ApiProperty } from '@nestjs/swagger';
+import { IsString, IsNumber, IsBoolean, IsEnum } from 'class-validator';
 import {
-  IsString,
-  IsNumber,
-  IsBoolean, IsEnum
-} from "class-validator";
-import { scopType, resources, permissionAction} from "../../../common/database/schema";
+  scopType,
+  resources,
+  permissionAction,
+} from '../../../common/database/schema';
 
 export class CreatePermissionDto {
-  @ApiProperty({description: "name"})
+  @ApiProperty({ description: 'name' })
   @IsString()
   name!: string;
 
-  @ApiProperty({description: "scope"})
+  @ApiProperty({ description: 'scope' })
   @IsString()
   scope!: scopType;
 
-  @ApiProperty({description: "description"})
+  @ApiProperty({ description: 'description' })
   @IsString()
   description!: string;
 
-  @ApiProperty({description: "permissionAction"})
+  @ApiProperty({ description: 'permissionAction' })
   @IsString()
-  action!:permissionAction;
+  action!: permissionAction;
 
-  @ApiProperty({description: "permission resource"})
+  @ApiProperty({ description: 'permission resource' })
   @IsString()
   resource!: resources;
 
-  @ApiProperty({description: "is Active"})
+  @ApiProperty({ description: 'is Active' })
   @IsString()
   isActive!: boolean;
-
 }

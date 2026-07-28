@@ -1,4 +1,8 @@
-import {scopType, resources, permissionAction} from "../../../common/database/schema";
+import {
+  scopType,
+  resources,
+  permissionAction,
+} from '../../../common/database/schema';
 
 export interface IPermission {
   id: number;
