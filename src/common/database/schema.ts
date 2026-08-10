@@ -21,7 +21,6 @@ export enum scopType {
   BRANCH = 'BRANCH',
   AGENT = 'AGENT',
   ORDER = 'ORDER',
-  SHIFT = 'SHIFT',
 }
 
 export enum permissionAction {
@@ -77,7 +76,7 @@ export const clients = pgTable('Client', {
   id: serial('id').primaryKey(),
   name: text('name'),
   businessName: text('businessName'),
-  type: text('tyoe').$type<clientType>().default(clientType.COURIER),
+  type: text('type').$type<clientType>().default(clientType.COURIER),
   status: text('status').$type<userStatus>().default(userStatus.ACTIVE),
   created_at: timestamp('created_at').defaultNow().notNull(),
   updated_at: timestamp('updated_at').defaultNow().notNull(),
