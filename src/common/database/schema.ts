@@ -8,80 +8,15 @@ import {
   boolean,
   index,
   unique,
+  json,
 } from 'drizzle-orm/pg-core';
-
-export enum clientType {
-  MERCHANT = 'MERCHANT',
-  COURIER = 'COURIER',
-}
-export enum scopType {
-  SYSTEM = 'SYSTEM',
-  CLIENT = 'CLIENT',
-  VENDOR = 'VENDOR',
-  BRANCH = 'BRANCH',
-  AGENT = 'AGENT',
-  ORDER = 'ORDER',
-}
-
-export enum permissionAction {
-  CREATE = 'CREATE',
-  UPDATE = 'UPDATE',
-  DELETE = 'DELETE',
-  READ = 'READ',
-  MANAGE = 'MANAGE',
-  ASSIGN = 'ASSIGN',
-  IMPORT = 'IMPORT',
-  EXPORT = 'EXPORT',
-  REJECT = 'REJECT',
-}
-
-export const enum resources {
-  // Identity & Access Management (IAM)
-  USER = 'USER',
-  ROLES = 'ROLE',
-  PERMISSION = 'PERMISSION',
-
-  // People & CRM (Actors)
-  CUSTOMER = 'CUSTOMER',
-  CLIENT = 'CLIENT',
-  AGENT = 'AGENT',
-  SUPERVISOR = 'SUPERVISOR',
-
-  // Business Core & Operations
-  VENDOR = 'VENDOR',
-  BRANCH = 'BRANCH',
-  ORDER = 'ORDER',
-  SHIFT = 'SHIFT',
-
-  // Billing & Financials
-  PLAN = 'PLAN',
-  SUBSCRIPTION = 'SUBSCRIPTION',
-  PAYMENT = 'PAYMENT',
-  BILLING = 'BILLING',
-  CURRENCY = 'CURRENCY',
-
-  // Geographic & Localization
-  COUNTRIES = 'COUNTRIES',
-  CITY = 'CITY',
-  ZONE = 'ZONE',
-}
-
-export enum userStatus {
-  ACTIVE = 'ACTIVE',
-  INACTIVE = 'INACTIVE',
-  SUSPENDED = 'SUSPENDED',
-}
-
-export const clients = pgTable('Client', {
-  id: serial('id').primaryKey(),
-  name: text('name'),
-  businessName: text('businessName'),
-  type: text('type').$type<clientType>().default(clientType.COURIER),
-  status: text('status').$type<userStatus>().default(userStatus.ACTIVE),
-  created_at: timestamp('created_at').defaultNow().notNull(),
-  updated_at: timestamp('updated_at').defaultNow().notNull(),
-  deleted_at: timestamp('deleted_at'),
-});
+import {
+  userStatus,
+  scopeType,
+  clientType,
+  permissionAction,
+  resources,
+} from './schema_enums';
 
 export const users = pgTable('User', {
   id: serial('id').primaryKey(),
@@ -95,10 +30,81 @@ export const users = pgTable('User', {
     .$type<userStatus>()
     .notNull()
     .default(userStatus.ACTIVE),
-  created_at: timestamp('created_at'),
-  updated_at: timestamp('updated_at'),
-  deleted_at: timestamp('deleted_at'),
+  createdAt: timestamp('createdAt'),
+  updatedAt: timestamp('updatedAt'),
+  deletedAt: timestamp('deletedAt'),
 });
+
+export const clients = pgTable(
+  'Client',
+  {
+    id: serial('id').primaryKey(),
+    domain: text('domain').notNull().default('tenant'),
+    logo: text('logo'),
+    name: text('name').notNull().default('tenant'),
+    type: text('type').$type<clientType>().default(clientType.COURIER),
+    status: text('status').$type<userStatus>().default(userStatus.ACTIVE),
+    createdAt: timestamp('createdAt'),
+    updatedAt: timestamp('updatedAt'),
+    deletedAt: timestamp('deletedAt'),
+  },
+  (table) => ({
+    typeIdx: index('Client_type_idx').on(table.type),
+    deletedAtIdx: index('Client_deletedAt_idx').on(table.deletedAt),
+  }),
+);
+
+export const vendors = pgTable(
+  'Vendor',
+  {
+    id: serial('id').primaryKey(),
+    clientId: integer('clientId')
+      .notNull()
+      .references(() => clients.id),
+    name: text('name').notNull(),
+    userId: integer('userId').references(() => users.id),
+    status: text('status')
+      .$type<userStatus>()
+      .notNull()
+      .default(userStatus.ACTIVE),
+    createdAt: timestamp('createdAt').defaultNow().notNull(),
+    updatedAt: timestamp('updatedAt').defaultNow().notNull(),
+    deletedAt: timestamp('deletedAt'),
+  },
+  (table) => ({
+    clientIdIdx: index('Vendor_clientId_idx').on(table.clientId),
+    userIdIdx: index('Vendor_userId_idx').on(table.userId),
+
+    deletedAtIdx: index('Vendor_deletedAt_idx').on(table.deletedAt),
+  }),
+);
+
+export const branches = pgTable(
+  'Branch',
+  {
+    id: serial('id').primaryKey(),
+    clientId: integer('clientId')
+      .notNull()
+      .references(() => clients.id),
+    vendorId: integer('vendorId').references(() => vendors.id),
+    name: text('name').notNull(),
+    address: text('address'),
+    mobile: text('mobile'),
+    phoneCode: text('phoneCode').default('+20').notNull(),
+    location: json('location'),
+    currentAddressId: integer('currentAddressId'), // Reference to current address
+    createdAt: timestamp('createdAt'),
+    updatedAt: timestamp('updatedAt'),
+    deletedAt: timestamp('deletedAt'),
+  },
+  (table) => ({
+    clientVendorIdx: index('Branch_clientId_vendorId_idx').on(
+      table.clientId,
+      table.vendorId,
+    ),
+    deletedAtIdx: index('Branch_deletedAt_idx').on(table.deletedAt),
+  }),
+);
 
 export const userClients = pgTable(
   'UserClient',
@@ -112,11 +118,9 @@ export const userClients = pgTable(
     }),
     isOwner: boolean('isOwner').default(false),
     status: text('status').$type<userStatus>(),
-    joined_at: timestamp('joined_at').defaultNow().notNull(),
-    left_at: timestamp('left_at').defaultNow().notNull(),
-    created_at: timestamp('created_at').defaultNow().notNull(),
-    updated_at: timestamp('updated_at').defaultNow().notNull(),
-    deleted_at: timestamp('deleted_at').defaultNow().notNull(),
+    createdAt: timestamp('createdAt'),
+    updatedAt: timestamp('updatedAt'),
+    deletedAt: timestamp('deletedAt'),
   },
   (table) => ({
     userClientUnique: unique().on(table.userId, table.clientId),
@@ -135,9 +139,9 @@ export const roles = pgTable(
     isGlobal: boolean('isGlobal'),
     isActive: boolean('isActive').notNull().default(true),
     description: text('description'),
-    created_at: timestamp('created_at'),
-    updated_at: timestamp('updated_at'),
-    deleted_at: timestamp('deleted_at'),
+    createdAt: timestamp('createdAt'),
+    updatedAt: timestamp('updatedAt'),
+    deletedAt: timestamp('deletedAt'),
   },
   (table) => ({
     nameIndex: index('Roles_name_unique').on(table.name),
@@ -149,13 +153,13 @@ export const permissions = pgTable(
   {
     id: serial('id').primaryKey(),
     name: text('name'),
-    scope: text('scope').$type<scopType>(),
+    scope: text('scope').$type<scopeType>().notNull().default(scopeType.CLIENT),
     description: text('description'),
     resource: text('resource').$type<resources>(),
     action: text('action').$type<permissionAction>(),
     isActive: boolean('isActive').notNull().default(true),
-    created_at: timestamp('created_at'),
-    updated_at: timestamp('updated_at'),
+    createdAt: timestamp('createdAt'),
+    updatedAt: timestamp('updatedAt'),
   },
   (table) => ({
     resourceActionIdx: index('Permission_resource_action_idx').on(
@@ -176,9 +180,39 @@ export const rolePermissions = pgTable('RolePermission', {
     onDelete: 'cascade',
   }),
   isActive: boolean('isActive').notNull().default(true),
-  created_at: timestamp('created_at'),
-  updated_at: timestamp('updated_at'),
+  createdAt: timestamp('createdAt'),
+  updatedAt: timestamp('updatedAt'),
 });
+
+export const roleBindings = pgTable(
+  'RoleBinding',
+  {
+    id: serial('id').primaryKey(),
+    userId: integer('userId')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    roleId: integer('roleId')
+      .notNull()
+      .references(() => roles.id, { onDelete: 'restrict' }),
+    scopeType: text('scopeType').$type<scopeType>().notNull(),
+    scopeId: integer('scopeId'), // null for MASTER scope
+    createdAt: timestamp('createdAt'),
+    updatedAt: timestamp('updatedAt'),
+  },
+  (table) => ({
+    userRoleScopeUnique: unique().on(
+      table.userId,
+      table.roleId,
+      table.scopeType,
+      table.scopeId,
+    ),
+    userIdIdx: index('RoleBinding_userId_idx').on(table.userId),
+    scopeTypeScopeIdIdx: index('RoleBinding_scopeType_scopeId_idx').on(
+      table.scopeType,
+      table.scopeId,
+    ),
+  }),
+);
 
 //User Relations
 export const userRelations = relations(users, ({ one }) => ({
