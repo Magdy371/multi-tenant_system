@@ -1,0 +1,15 @@
+export enum AuthErrorCode {
+  GENERAL = "general",
+  LOGIN_VALIDATION = "login_validation",
+  LOCK_ACCOUNT = "lock_account",
+  BUSINESS_NAME = "business_name",
+  REFRESH_TOKEN = "refresh_token",
+  TOKEN = "token",
+  USER = "user",
+  USER_PASSWORD = "user_password",
+  CURRENT_PASSWORD = "current_password",
+  OTP = "otp",
+  EMAIL = "email",
+  TOKEN_MISSING = "token_missing",
+  USER_AUTHENTICATION = "user_authentication",
+}

@@ -9,6 +9,8 @@ import {
   index,
   unique,
   json,
+  PgColumn,
+  PgTableWithColumns,
 } from 'drizzle-orm/pg-core';
 import {
   userStatus,
@@ -214,15 +216,85 @@ export const roleBindings = pgTable(
   }),
 );
 
-//User Relations
-export const userRelations = relations(users, ({ one }) => ({
+export const userRelations = relations(users, ({ one, many }) => ({
   role: one(roles, {
     fields: [users.roleId],
     references: [roles.id],
   }),
+  userClients: many(userClients),
+  roleBindings: many(roleBindings),
+  vendors: many(vendors),
+  branches: many(branches),
 }));
 
-//Role Relations
+export const clientsRelations = relations(clients, ({ many }) => ({
+  vendors: many(vendors),
+  branches: many(branches),
+  userClients: many(userClients),
+}));
+
+export const vendorsRelations = relations(vendors, ({ one, many }) => ({
+  client: one(clients, {
+    fields: [vendors.clientId],
+    references: [clients.id],
+  }),
+  user: one(users, {
+    fields: [vendors.userId],
+    references: [users.id],
+  }),
+  branches: many(branches),
+}));
+
+export const branchesRelations = relations(branches, ({ one }) => ({
+  client: one(clients, {
+    fields: [branches.clientId],
+    references: [clients.id],
+  }),
+  vendor: one(vendors, {
+    fields: [branches.vendorId],
+    references: [vendors.id],
+  }),
+}));
+
+export const userClientsRelations = relations(userClients, ({ one }) => ({
+  user: one(users, {
+    fields: [userClients.userId],
+    references: [users.id],
+  }),
+  client: one(clients, {
+    fields: [userClients.clientId],
+    references: [clients.id],
+  }),
+}));
+
 export const rolesRelations = relations(roles, ({ many }) => ({
   users: many(users),
+  rolePermissions: many(rolePermissions),
+  roleBindings: many(roleBindings),
+}));
+
+export const permissionsRelations = relations(permissions, ({ many }) => ({
+  rolePermissions: many(rolePermissions),
+}));
+
+export const rolePermissionsRelations = relations(rolePermissions, ({ one }) => ({
+  role: one(roles, {
+    fields: [rolePermissions.roleId],
+    references: [roles.id],
+  }),
+  permission: one(permissions, {
+    fields: [rolePermissions.permissionId],
+    references: [permissions.id],
+  }),
+}));
+
+export const roleBindingsRelations = relations(roleBindings, ({ one }) => ({
+  user: one(users, {
+    fields: [roleBindings.userId],
+    references: [users.id],
+  }),
+  role: one(roles, {
+    fields: [roleBindings.roleId],
+    references: [roles.id],
+  }),
 }));

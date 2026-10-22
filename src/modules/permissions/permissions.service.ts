@@ -8,7 +8,7 @@ import { eq } from 'drizzle-orm';
 import { ConflictException, NotFoundException } from '@nestjs/common';
 
 export class PermissionSerivce implements IPermissionsService {
-  constructor(private readonly drizzleService: DrizzleService) {}
+  constructor(private readonly drizzleService: DrizzleService) { }
 
   async create(data: CreatePermissionDto): Promise<IPermission> {
     //check existing permission
@@ -32,8 +32,8 @@ export class PermissionSerivce implements IPermissionsService {
       resource: createdPermission.resource,
       action: createdPermission.action,
       isActive: createdPermission.isActive,
-      created_at: createdPermission.created_at,
-      updated_at: createdPermission.updated_at,
+      createdAt: createdPermission.createdAt,
+      updatedAt: createdPermission.updatedAt,
     };
   }
 

@@ -13,7 +13,7 @@ import { and, eq, isNull } from 'drizzle-orm';
 
 @Injectable()
 export class roleservice implements IRolesService {
-  constructor(private drizzle: DrizzleService) {}
+  constructor(private drizzle: DrizzleService) { }
   async create(data: CreateRoleDto): Promise<Role> {
     //check if role name does exist
     const roleName = await this.drizzle.db
@@ -23,7 +23,7 @@ export class roleservice implements IRolesService {
         and(
           eq(roles.name, data.name),
           eq(roles.isActive, true),
-          isNull(roles.deleted_at),
+          isNull(roles.deletedAt),
         ),
       )
       .limit(1);
@@ -62,7 +62,7 @@ export class roleservice implements IRolesService {
         and(
           eq(roles.id, id),
           eq(roles.isActive, true),
-          isNull(roles.deleted_at),
+          isNull(roles.deletedAt),
         ),
       )
       .limit(1);
@@ -87,7 +87,7 @@ export class roleservice implements IRolesService {
         description: roles.description,
       })
       .from(roles)
-      .where(and(eq(roles.isActive, true), isNull(roles.deleted_at)));
+      .where(and(eq(roles.isActive, true), isNull(roles.deletedAt)));
     return RoleArray;
   }
   async update(id: number, data: Partial<UpdateRoleDto>): Promise<Role> {
@@ -121,7 +121,7 @@ export class roleservice implements IRolesService {
     await this.drizzle.db
       .update(roles)
       .set({
-        deleted_at: new Date(),
+        deletedAt: new Date(),
       })
       .where(eq(roles.id, id));
     return { message: 'Role deleted successfully' };

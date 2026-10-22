@@ -1,10 +1,10 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsString, IsNumber, IsBoolean, IsEnum } from 'class-validator';
 import {
-  scopType,
+  scopeType,
   resources,
   permissionAction,
-} from '../../../common/database/schema';
+} from '../../../common/database/schema_enums';
 
 export class CreatePermissionDto {
   @ApiProperty({ description: 'name' })
@@ -13,7 +13,7 @@ export class CreatePermissionDto {
 
   @ApiProperty({ description: 'scope' })
   @IsString()
-  scope!: scopType;
+  scope!: scopeType;
 
   @ApiProperty({ description: 'description' })
   @IsString()

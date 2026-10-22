@@ -4,37 +4,37 @@ import { IsBoolean, IsOptional, IsString } from 'class-validator';
 import {
   permissionAction,
   resources,
-  scopType,
-} from '../../../common/database/schema';
+  scopeType,
+} from '../../../common/database/schema_enums';
 
 export class UpdatePermissionDto {
   @ApiProperty({ description: 'name' })
   @IsString()
   @IsOptional()
-  name: string;
+  name?: string;
 
   @ApiProperty({ description: 'scope' })
   @IsString()
   @IsOptional()
-  scope: scopType;
+  scope?: scopeType;
 
   @ApiProperty({ description: 'description' })
   @IsString()
   @IsOptional()
-  description: string;
+  description?: string;
 
   @ApiProperty({ description: 'permissionAction' })
   @IsString()
   @IsOptional()
-  action: permissionAction;
+  action?: permissionAction;
 
   @ApiProperty({ description: 'permission resource' })
   @IsString()
   @IsOptional()
-  resource: resources;
+  resource?: resources;
 
   @ApiProperty({ description: 'is Active' })
   @IsBoolean()
   @IsOptional()
-  isActive: boolean;
+  isActive?: boolean;
 }
