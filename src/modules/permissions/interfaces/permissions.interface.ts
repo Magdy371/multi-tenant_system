@@ -1,17 +1,17 @@
 import {
-  scopType,
+  scopeType,
   resources,
   permissionAction,
-} from '../../../common/database/schema';
+} from '../../../common/database/schema_enums';
 
 export interface IPermission {
   id: number;
   name: string | null;
-  scope: scopType | null;
+  scope: scopeType | null;
   description: string | null;
   resource: resources | null;
   action: permissionAction | null;
   isActive: boolean;
-  created_at: Date | null;
-  updated_at: Date | null;
+  createdAt: Date | null;
+  updatedAt: Date | null;
 }

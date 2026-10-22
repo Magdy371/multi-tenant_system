@@ -13,7 +13,7 @@ import {
   userStatus,
 } from 'src/common/database/schema_enums';
 import { UserWithRoles } from './interface/user-with-roles.interface';
-import { RoleNameService } from '../roles/role-name.service';
+import { RoleNamesService } from '../roles/role-names.service';
 import { isArray } from 'class-validator';
 
 //Actions that can be performed
@@ -29,6 +29,8 @@ export type ScopeType = 'MASTER' | 'CLIENT' | 'VENDOR' | 'BRANCH';
 
 export type SubjectType = ForcedSubject<Subjects> | Subjects;
 
+
+//Ability is essentially the runtime permission engine.
 export type AppAbility = Ability<[Actions, SubjectType]>;
 export const AppAbility = Ability as AbilityClass<AppAbility>;
 
@@ -43,8 +45,9 @@ export interface PermissionConditions {
 }
 @Injectable()
 export class CaslAbilityFactory {
-  constructor(private readonly roleNamesService: RoleNameService) { }
+  constructor() { }
   createForUser(user: UserWithRoles) {
+    //AbilityBuilder is used to construct the rules.
     const { can, cannot, build } = new AbilityBuilder<AppAbility>(AppAbility);
 
     //Check is UserWithRoles is valid

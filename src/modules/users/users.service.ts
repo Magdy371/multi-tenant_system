@@ -11,13 +11,13 @@ import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UserService implements IUserService {
-  constructor(private drizzle: DrizzleService) {}
+  constructor(private drizzle: DrizzleService) { }
 
   async create(dto: CreateUserDto): Promise<UserEntity> {
     const existingEmail = await this.drizzle.db
       .select()
       .from(users)
-      .where(and(eq(users.email, dto.email), isNull(users.deleted_at)))
+      .where(and(eq(users.email, dto.email), isNull(users.deletedAt)))
       .limit(1);
 
     if (existingEmail.length > 0) {
@@ -34,7 +34,7 @@ export class UserService implements IUserService {
         name: dto.name,
         email: dto.email,
         password: passwordHashed,
-        created_at: new Date(),
+        createdAt: new Date(),
       })
       .returning();
 
@@ -42,9 +42,9 @@ export class UserService implements IUserService {
       id: user.id,
       name: user.name,
       email: user.email,
-      created_at: user.created_at,
-      updated_at: user.updated_at,
-      deleted_at: user.deleted_at,
+      created_at: user.createdAt,
+      updated_at: user.updatedAt,
+      deleted_at: user.deletedAt,
     };
   }
 
@@ -55,12 +55,12 @@ export class UserService implements IUserService {
         id: users.id,
         name: users.name,
         email: users.email,
-        created_at: users.created_at,
-        updated_at: users.updated_at,
-        deleted_at: users.deleted_at,
+        created_at: users.createdAt,
+        updated_at: users.updatedAt,
+        deleted_at: users.deletedAt,
       })
       .from(users)
-      .where(and(eq(users.id, id), isNull(users.deleted_at)))
+      .where(and(eq(users.id, id), isNull(users.deletedAt)))
       .limit(1);
     if (!user) {
       throw new BadRequestException('User does not exist');
@@ -74,12 +74,12 @@ export class UserService implements IUserService {
         id: users.id,
         name: users.name,
         email: users.email,
-        created_at: users.created_at,
-        updated_at: users.updated_at,
-        deleted_at: users.deleted_at,
+        created_at: users.createdAt,
+        updated_at: users.updatedAt,
+        deleted_at: users.deletedAt,
       })
       .from(users)
-      .where(isNull(users.deleted_at));
+      .where(isNull(users.deletedAt));
     if (allUsers.length === 0) {
       throw new BadRequestException('No users found.');
     }
@@ -109,7 +109,7 @@ export class UserService implements IUserService {
       name: updatedUser[0].name,
       email: updatedUser[0].email,
       created_at: existingUser.created_at,
-      updated_at: updatedUser[0].updated_at,
+      updated_at: updatedUser[0].updatedAt,
       deleted_at: existingUser.deleted_at,
     };
   }
@@ -119,7 +119,7 @@ export class UserService implements IUserService {
     await this.drizzle.db
       .update(users)
       .set({
-        deleted_at: new Date(),
+        deletedAt: new Date(),
       })
       .where(eq(users.id, id));
     return { message: 'user deleted successfully.' };

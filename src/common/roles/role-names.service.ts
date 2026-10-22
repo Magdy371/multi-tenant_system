@@ -4,12 +4,12 @@ import { roles } from '../database/schema';
 import { isNull, and, eq } from 'drizzle-orm';
 
 @Injectable()
-export class RoleNameService implements OnModuleInit {
+export class RoleNamesService implements OnModuleInit {
   private roleNames: string[] = [];
   private roleNamesSet: Set<string> = new Set();
 
-  constructor(private readonly drizzle: DrizzleService) {}
-  async onModuleInit() {}
+  constructor(private readonly drizzle: DrizzleService) { }
+  async onModuleInit() { }
 
   async loadRoleNames(): Promise<void> {
     try {
