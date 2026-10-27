@@ -11,7 +11,7 @@ import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UserService implements IUserService {
-  constructor(private drizzle: DrizzleService) { }
+  constructor(private drizzle: DrizzleService) {}
 
   async create(dto: CreateUserDto): Promise<UserEntity> {
     const existingEmail = await this.drizzle.db

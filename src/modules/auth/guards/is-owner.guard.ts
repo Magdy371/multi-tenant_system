@@ -1,15 +1,15 @@
 import {
-    Injectable,
-    CanActivate,
-    ExecutionContext,
-    ForbiddenException,
-    UnauthorizedException,
-} from "@nestjs/common"
+  Injectable,
+  CanActivate,
+  ExecutionContext,
+  ForbiddenException,
+  UnauthorizedException,
+} from '@nestjs/common';
 
-import { Reflector } from "@nestjs/core";
-import { IS_OWNER_KEY } from "../decorators/is-owner.decorator";
-import { CaslAbilityFactory } from "src/common/casl/casl-ability.factory";
-import { Observable } from "rxjs";
+import { Reflector } from '@nestjs/core';
+import { IS_OWNER_KEY } from '../decorators/is-owner.decorator';
+import { CaslAbilityFactory } from 'src/common/casl/casl-ability.factory';
+import { Observable } from 'rxjs';
 
 /**
  * Guard to check if the user is the owner of a resource
@@ -23,30 +23,31 @@ import { Observable } from "rxjs";
  */
 @Injectable()
 export class IsOwnerGurad implements CanActivate {
-    constructor(
-        private reflector: Reflector,
-    ) { }
-    canActivate(context: ExecutionContext): boolean | Promise<boolean> | Observable<boolean> {
-        const paramName = this.reflector.get<string>(
-            IS_OWNER_KEY,
-            context.getHandler(),
-        )
-        //// If no @IsOwner decorator, allow access
-        if (!paramName) {
-            return true;
-        }
-        const req = context.switchToHttp().getRequest();
-        const user = req.user;
-        if (!user) throw new ForbiddenException("User not Authenticated");
-        const resourceId = parseInt(req.parameters[paramName], 10);
-        if (!resourceId || isNaN(resourceId)) throw new ForbiddenException(`Invalid ${paramName} parameter`);
-        if (user.id === resourceId) {
-            return true;
-        }
-        const role_name: string = req.roleBindings.role.name;
-        if (role_name === "MASTER_ADMIN") {
-            return true;
-        }
-        throw new ForbiddenException("Do not have Permission to this resource");
+  constructor(private reflector: Reflector) {}
+  canActivate(
+    context: ExecutionContext,
+  ): boolean | Promise<boolean> | Observable<boolean> {
+    const paramName = this.reflector.get<string>(
+      IS_OWNER_KEY,
+      context.getHandler(),
+    );
+    //// If no @IsOwner decorator, allow access
+    if (!paramName) {
+      return true;
     }
+    const req = context.switchToHttp().getRequest();
+    const user = req.user;
+    if (!user) throw new ForbiddenException('User not Authenticated');
+    const resourceId = parseInt(req.parameters[paramName], 10);
+    if (!resourceId || isNaN(resourceId))
+      throw new ForbiddenException(`Invalid ${paramName} parameter`);
+    if (user.id === resourceId) {
+      return true;
+    }
+    const role_name: string = req.roleBindings.role.name;
+    if (role_name === 'MASTER_ADMIN') {
+      return true;
+    }
+    throw new ForbiddenException('Do not have Permission to this resource');
+  }
 }

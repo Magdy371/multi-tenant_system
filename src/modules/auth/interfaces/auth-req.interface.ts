@@ -3,10 +3,10 @@
 // ────────────────────────────────────────────────────────────────────
 
 export interface AuthenticatedUser {
-    id: number;
-    clientId?: number;
+  id: number;
+  clientId?: number;
 }
 
 export interface AuthenticatedRequest {
-    user: AuthenticatedUser;
+  user: AuthenticatedUser;
 }

@@ -1,5 +1,5 @@
-import { SetMetadata } from "@nestjs/common";
-export const IS_OWNER_KEY = "isOwner";
+import { SetMetadata } from '@nestjs/common';
+export const IS_OWNER_KEY = 'isOwner';
 
 /**
  * Decorator to check if the user is the owner of a resource
@@ -9,4 +9,4 @@ export const IS_OWNER_KEY = "isOwner";
  */
 
 export const IsOwner = (paramName: string) =>
-    SetMetadata(IS_OWNER_KEY, paramName);
+  SetMetadata(IS_OWNER_KEY, paramName);

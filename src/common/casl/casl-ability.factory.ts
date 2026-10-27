@@ -29,7 +29,6 @@ export type ScopeType = 'MASTER' | 'CLIENT' | 'VENDOR' | 'BRANCH';
 
 export type SubjectType = ForcedSubject<Subjects> | Subjects;
 
-
 //Ability is essentially the runtime permission engine.
 export type AppAbility = Ability<[Actions, SubjectType]>;
 export const AppAbility = Ability as AbilityClass<AppAbility>;
@@ -45,7 +44,7 @@ export interface PermissionConditions {
 }
 @Injectable()
 export class CaslAbilityFactory {
-  constructor() { }
+  constructor() {}
   createForUser(user: UserWithRoles) {
     //AbilityBuilder is used to construct the rules.
     const { can, cannot, build } = new AbilityBuilder<AppAbility>(AppAbility);
@@ -111,7 +110,9 @@ export class CaslAbilityFactory {
             .constructor as ExtractSubjectType<Subjects>,
       });
     } catch (error) {
-      throw new Error((error as Error)?.message || 'Error creating ability for user');
+      throw new Error(
+        (error as Error)?.message || 'Error creating ability for user',
+      );
     }
   }
 

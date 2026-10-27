@@ -218,82 +218,82 @@ export const roleBindings = pgTable(
 
 // Refresh Tokens for secure token rotation
 export const refreshTokens = pgTable(
-  "RefreshToken",
+  'RefreshToken',
   {
-    id: serial("id").primaryKey(),
-    userId: integer("userId")
+    id: serial('id').primaryKey(),
+    userId: integer('userId')
       .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
-    tokenHash: text("tokenHash").notNull().unique(),
-    expiresAt: timestamp("expiresAt").notNull(),
-    createdAt: timestamp("createdAt").defaultNow().notNull(),
-    revokedAt: timestamp("revokedAt"),
-    replacedBy: integer("replacedBy"),
+      .references(() => users.id, { onDelete: 'cascade' }),
+    tokenHash: text('tokenHash').notNull().unique(),
+    expiresAt: timestamp('expiresAt').notNull(),
+    createdAt: timestamp('createdAt').defaultNow().notNull(),
+    revokedAt: timestamp('revokedAt'),
+    replacedBy: integer('replacedBy'),
   },
   (table) => ({
-    userIdIdx: index("RefreshToken_userId_idx").on(table.userId),
-    expiresAtIdx: index("RefreshToken_expiresAt_idx").on(table.expiresAt),
+    userIdIdx: index('RefreshToken_userId_idx').on(table.userId),
+    expiresAtIdx: index('RefreshToken_expiresAt_idx').on(table.expiresAt),
   }),
 );
 
 // User Sessions for tracking active sessions
 export const userSessions = pgTable(
-  "UserSession",
+  'UserSession',
   {
-    id: serial("id").primaryKey(),
-    userId: integer("userId")
+    id: serial('id').primaryKey(),
+    userId: integer('userId')
       .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
-    refreshTokenId: integer("refreshTokenId").references(
+      .references(() => users.id, { onDelete: 'cascade' }),
+    refreshTokenId: integer('refreshTokenId').references(
       () => refreshTokens.id,
       {
-        onDelete: "cascade",
+        onDelete: 'cascade',
       },
     ),
-    ipAddress: text("ipAddress"),
-    userAgent: text("userAgent"),
-    lastActivityAt: timestamp("lastActivityAt").defaultNow().notNull(),
-    createdAt: timestamp("createdAt").defaultNow().notNull(),
-    expiresAt: timestamp("expiresAt").notNull(),
+    ipAddress: text('ipAddress'),
+    userAgent: text('userAgent'),
+    lastActivityAt: timestamp('lastActivityAt').defaultNow().notNull(),
+    createdAt: timestamp('createdAt').defaultNow().notNull(),
+    expiresAt: timestamp('expiresAt').notNull(),
   },
   (table) => ({
-    userIdIdx: index("UserSession_userId_idx").on(table.userId),
-    expiresAtIdx: index("UserSession_expiresAt_idx").on(table.expiresAt),
+    userIdIdx: index('UserSession_userId_idx').on(table.userId),
+    expiresAtIdx: index('UserSession_expiresAt_idx').on(table.expiresAt),
   }),
 );
 
 // Login Attempts for account lockout mechanism
 export const loginAttempts = pgTable(
-  "LoginAttempt",
+  'LoginAttempt',
   {
-    id: serial("id").primaryKey(),
-    email: text("email").notNull(),
-    ipAddress: text("ipAddress"),
-    success: boolean("success").notNull(),
-    attemptedAt: timestamp("attemptedAt").defaultNow().notNull(),
-    metadata: json("metadata"),
+    id: serial('id').primaryKey(),
+    email: text('email').notNull(),
+    ipAddress: text('ipAddress'),
+    success: boolean('success').notNull(),
+    attemptedAt: timestamp('attemptedAt').defaultNow().notNull(),
+    metadata: json('metadata'),
   },
   (table) => ({
-    emailIdx: index("LoginAttempt_email_idx").on(table.email),
-    attemptedAtIdx: index("LoginAttempt_attemptedAt_idx").on(table.attemptedAt),
+    emailIdx: index('LoginAttempt_email_idx').on(table.email),
+    attemptedAtIdx: index('LoginAttempt_attemptedAt_idx').on(table.attemptedAt),
   }),
 );
 
 export const apiKeys = pgTable(
-  "ApiKey",
+  'ApiKey',
   {
-    id: serial("id").primaryKey(),
-    keyHash: text("keyHash").notNull().unique(),
-    name: text("name").notNull(),
-    clientId: integer("clientId").references(() => clients.id),
-    vendorId: integer("vendorId").references(() => vendors.id),
-    userId: integer("userId").references(() => users.id),
-    attributes: json("attributes"),
-    createdAt: timestamp("createdAt").defaultNow().notNull(),
-    revokedAt: timestamp("revokedAt"),
+    id: serial('id').primaryKey(),
+    keyHash: text('keyHash').notNull().unique(),
+    name: text('name').notNull(),
+    clientId: integer('clientId').references(() => clients.id),
+    vendorId: integer('vendorId').references(() => vendors.id),
+    userId: integer('userId').references(() => users.id),
+    attributes: json('attributes'),
+    createdAt: timestamp('createdAt').defaultNow().notNull(),
+    revokedAt: timestamp('revokedAt'),
   },
   (table) => ({
-    clientVendorUserIdx: index("ApiKey_clientId_vendorId_userId_idx").on(
+    clientVendorUserIdx: index('ApiKey_clientId_vendorId_userId_idx').on(
       table.clientId,
       table.vendorId,
       table.userId,
@@ -365,16 +365,19 @@ export const permissionsRelations = relations(permissions, ({ many }) => ({
   rolePermissions: many(rolePermissions),
 }));
 
-export const rolePermissionsRelations = relations(rolePermissions, ({ one }) => ({
-  role: one(roles, {
-    fields: [rolePermissions.roleId],
-    references: [roles.id],
+export const rolePermissionsRelations = relations(
+  rolePermissions,
+  ({ one }) => ({
+    role: one(roles, {
+      fields: [rolePermissions.roleId],
+      references: [roles.id],
+    }),
+    permission: one(permissions, {
+      fields: [rolePermissions.permissionId],
+      references: [permissions.id],
+    }),
   }),
-  permission: one(permissions, {
-    fields: [rolePermissions.permissionId],
-    references: [permissions.id],
-  }),
-}));
+);
 
 export const roleBindingsRelations = relations(roleBindings, ({ one }) => ({
   user: one(users, {

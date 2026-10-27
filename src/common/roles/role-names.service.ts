@@ -8,8 +8,8 @@ export class RoleNamesService implements OnModuleInit {
   private roleNames: string[] = [];
   private roleNamesSet: Set<string> = new Set();
 
-  constructor(private readonly drizzle: DrizzleService) { }
-  async onModuleInit() { }
+  constructor(private readonly drizzle: DrizzleService) {}
+  async onModuleInit() {}
 
   async loadRoleNames(): Promise<void> {
     try {

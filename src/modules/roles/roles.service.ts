@@ -13,7 +13,7 @@ import { and, eq, isNull } from 'drizzle-orm';
 
 @Injectable()
 export class roleservice implements IRolesService {
-  constructor(private drizzle: DrizzleService) { }
+  constructor(private drizzle: DrizzleService) {}
   async create(data: CreateRoleDto): Promise<Role> {
     //check if role name does exist
     const roleName = await this.drizzle.db
