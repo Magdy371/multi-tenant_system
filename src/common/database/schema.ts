@@ -216,6 +216,91 @@ export const roleBindings = pgTable(
   }),
 );
 
+// Refresh Tokens for secure token rotation
+export const refreshTokens = pgTable(
+  "RefreshToken",
+  {
+    id: serial("id").primaryKey(),
+    userId: integer("userId")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    tokenHash: text("tokenHash").notNull().unique(),
+    expiresAt: timestamp("expiresAt").notNull(),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    revokedAt: timestamp("revokedAt"),
+    replacedBy: integer("replacedBy"),
+  },
+  (table) => ({
+    userIdIdx: index("RefreshToken_userId_idx").on(table.userId),
+    expiresAtIdx: index("RefreshToken_expiresAt_idx").on(table.expiresAt),
+  }),
+);
+
+// User Sessions for tracking active sessions
+export const userSessions = pgTable(
+  "UserSession",
+  {
+    id: serial("id").primaryKey(),
+    userId: integer("userId")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    refreshTokenId: integer("refreshTokenId").references(
+      () => refreshTokens.id,
+      {
+        onDelete: "cascade",
+      },
+    ),
+    ipAddress: text("ipAddress"),
+    userAgent: text("userAgent"),
+    lastActivityAt: timestamp("lastActivityAt").defaultNow().notNull(),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    expiresAt: timestamp("expiresAt").notNull(),
+  },
+  (table) => ({
+    userIdIdx: index("UserSession_userId_idx").on(table.userId),
+    expiresAtIdx: index("UserSession_expiresAt_idx").on(table.expiresAt),
+  }),
+);
+
+// Login Attempts for account lockout mechanism
+export const loginAttempts = pgTable(
+  "LoginAttempt",
+  {
+    id: serial("id").primaryKey(),
+    email: text("email").notNull(),
+    ipAddress: text("ipAddress"),
+    success: boolean("success").notNull(),
+    attemptedAt: timestamp("attemptedAt").defaultNow().notNull(),
+    metadata: json("metadata"),
+  },
+  (table) => ({
+    emailIdx: index("LoginAttempt_email_idx").on(table.email),
+    attemptedAtIdx: index("LoginAttempt_attemptedAt_idx").on(table.attemptedAt),
+  }),
+);
+
+export const apiKeys = pgTable(
+  "ApiKey",
+  {
+    id: serial("id").primaryKey(),
+    keyHash: text("keyHash").notNull().unique(),
+    name: text("name").notNull(),
+    clientId: integer("clientId").references(() => clients.id),
+    vendorId: integer("vendorId").references(() => vendors.id),
+    userId: integer("userId").references(() => users.id),
+    attributes: json("attributes"),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    revokedAt: timestamp("revokedAt"),
+  },
+  (table) => ({
+    clientVendorUserIdx: index("ApiKey_clientId_vendorId_userId_idx").on(
+      table.clientId,
+      table.vendorId,
+      table.userId,
+    ),
+  }),
+);
+
 export const userRelations = relations(users, ({ one, many }) => ({
   role: one(roles, {
     fields: [users.roleId],
@@ -225,6 +310,9 @@ export const userRelations = relations(users, ({ one, many }) => ({
   roleBindings: many(roleBindings),
   vendors: many(vendors),
   branches: many(branches),
+  apiKeys: many(apiKeys),
+  refreshTokens: many(refreshTokens),
+  userSessions: many(userSessions),
 }));
 
 export const clientsRelations = relations(clients, ({ many }) => ({
@@ -296,5 +384,38 @@ export const roleBindingsRelations = relations(roleBindings, ({ one }) => ({
   role: one(roles, {
     fields: [roleBindings.roleId],
     references: [roles.id],
+  }),
+}));
+
+export const apiKeysRelations = relations(apiKeys, ({ one }) => ({
+  client: one(clients, {
+    fields: [apiKeys.clientId],
+    references: [clients.id],
+  }),
+  vendor: one(vendors, {
+    fields: [apiKeys.vendorId],
+    references: [vendors.id],
+  }),
+  user: one(users, {
+    fields: [apiKeys.userId],
+    references: [users.id],
+  }),
+}));
+
+export const refreshTokensRelations = relations(refreshTokens, ({ one }) => ({
+  user: one(users, {
+    fields: [refreshTokens.userId],
+    references: [users.id],
+  }),
+}));
+
+export const userSessionsRelations = relations(userSessions, ({ one }) => ({
+  user: one(users, {
+    fields: [userSessions.userId],
+    references: [users.id],
+  }),
+  refreshToken: one(refreshTokens, {
+    fields: [userSessions.refreshTokenId],
+    references: [refreshTokens.id],
   }),
 }));

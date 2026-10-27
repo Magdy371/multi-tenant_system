@@ -33,6 +33,16 @@ export class ChangePasswordDto {
     confirmPassword!: string;
 }
 
+export class UserChangePasswordDto extends ChangePasswordDto {
+    @ApiProperty({
+        description: "Current password",
+        example: "OldPass123!",
+    })
+    @IsNotEmpty({ message: "Current password is required" })
+    @IsString()
+    currentPassword!: string;
+}
+
 export class AdminChangePasswordDto extends ChangePasswordDto {
     // Inherits newPassword and confirmPassword from ChangePasswordDto
     // Admin doesn't need to provide current password when changing other users' passwords

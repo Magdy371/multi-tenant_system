@@ -1,40 +1,38 @@
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { INestApplication } from '@nestjs/common';
-import { SwaggerTheme, SwaggerThemeNameEnum } from 'swagger-themes';
-import { UsersModule } from '../modules/users/users.module';
-import { RoleModule } from 'src/modules/roles/roles.module';
-import { PermissionsModule } from '../modules/permissions/permissions.module';
+import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
+import { INestApplication } from "@nestjs/common";
+import { SwaggerTheme, SwaggerThemeNameEnum } from "swagger-themes";
 
 export function setupSwagger(app: INestApplication) {
   const theme = new SwaggerTheme();
 
   const config = new DocumentBuilder()
-    .setTitle('Tenant-System API')
-    .setDescription('tenant-system Backend API Documentation')
-    .setVersion('2.0.0')
-    .addTag('Users', 'User management endpoints')
-    .addTag('Roles', 'Roles management endPoints')
-    .addTag('Permissions', 'Permissions management endPoints')
+    .setTitle("VolTrack API")
+    .setDescription("VolTrack Backend API Documentation")
+    .setVersion("2.0.0")
     .addBearerAuth(
       {
-        type: 'http',
-        scheme: 'bearer',
-        bearerFormat: 'JWT',
-        name: 'JWT-auth',
-        description: 'Enter JWT token',
-        in: 'header',
+        type: "http",
+        scheme: "bearer",
+        bearerFormat: "JWT",
+        name: "JWT-auth",
+        description: "Enter JWT token",
+        in: "header",
       },
-      'JWT-auth',
+      "JWT-auth",
     )
     .build();
 
   const document = SwaggerModule.createDocument(app, config, {
-    include: [UsersModule, RoleModule, PermissionsModule],
     operationIdFactory: (controllerKey: string, methodKey: string) => methodKey,
   });
 
   // Define public endpoints that should not require authentication
-  const publicEndpoints = ['/users', '/roles', '/permissions'];
+  const publicEndpoints = [
+    "/api/auth/login",
+    "/api/auth/refresh",
+    "/api/clients/signup",
+    "/api/agents/login",
+  ];
 
   // Add global security to all endpoints except public ones
   Object.keys(document.paths).forEach((path) => {
@@ -49,17 +47,53 @@ export function setupSwagger(app: INestApplication) {
           operation.security === undefined &&
           !publicEndpoints.includes(path)
         ) {
-          operation.security = [{ 'JWT-auth': [] }];
+          operation.security = [{ "JWT-auth": [] }];
         }
       });
     }
   });
 
-  SwaggerModule.setup('api/docs', app, document, {
+  SwaggerModule.setup("api/docs", app, document, {
     explorer: true,
     customCss: theme.getBuffer(SwaggerThemeNameEnum.DRACULA),
     swaggerOptions: {
       persistAuthorization: true,
     },
+    customJsStr: `
+      // Auto-capture and apply access token from login responses
+      (function() {
+        const originalFetch = window.fetch;
+        window.fetch = function(...args) {
+          return originalFetch.apply(this, args).then(async function(response) {
+            const url = response.url || '';
+            if (url.includes('/auth/login') || url.includes('/agents/login') || url.includes('/auth/refresh')) {
+              const clonedResponse = response.clone();
+              try {
+                const data = await clonedResponse.json();
+                if (data && data.accessToken) {
+                  // Store token and auto-authorize
+                  setTimeout(() => {
+                    const ui = window.ui;
+                    if (ui && ui.authActions) {
+                      ui.authActions.authorize({
+                        'JWT-auth': {
+                          name: 'JWT-auth',
+                          schema: { type: 'http', scheme: 'bearer' },
+                          value: data.accessToken
+                        }
+                      });
+                      console.log('✅ Token automatically applied to authorization');
+                    }
+                  }, 100);
+                }
+              } catch (e) {
+                console.error('Failed to auto-capture token:', e);
+              }
+            }
+            return response;
+          });
+        };
+      })();
+    `,
   });
 }

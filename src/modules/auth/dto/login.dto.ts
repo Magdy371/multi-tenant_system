@@ -1,15 +1,16 @@
 import { IsEmail, IsOptional, IsString, MinLength } from 'class-validator';
-import { ApiProperty, ApiPropertyOptions } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional, ApiPropertyOptions } from '@nestjs/swagger';
 import { IsNotDisposableEmail } from 'src/common/validators/email.validator';
 
 export class LoginDto {
-    @ApiProperty({
+    @ApiPropertyOptional({
         description:
-            "client name domain",
-        example: "pro",
+            "Business Name (optional, not required for MASTER_ADMIN, required for client users)",
+        example: "v2",
     })
+    @IsOptional()
     @IsString()
-    bussinessName?: string;
+    businessName?: string;
 
     @ApiProperty({ description: "User email" })
     @IsEmail()
